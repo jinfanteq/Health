@@ -1,6 +1,7 @@
 package model.entidades;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 
 public class CitaMedica {
     private Paciente pacienteSolicitante;
@@ -8,6 +9,9 @@ public class CitaMedica {
     private LocalDateTime horaYFecha;
     private double idPaciente;
     private double idMedico;
+    private int idCita;
+
+    Random random = new Random();
 
     public CitaMedica(Paciente pacienteSolicitante, Medico medicoQueAtiende, LocalDateTime horaYFecha) {
         this.pacienteSolicitante = pacienteSolicitante;
@@ -15,6 +19,18 @@ public class CitaMedica {
         this.horaYFecha = horaYFecha;
         this.idPaciente = pacienteSolicitante.getId();
         this.idMedico = medicoQueAtiende.getId();
+        //Numero al azar
+        this.idCita = 1000 + random.nextInt(9000);
+
+    }
+    public CitaMedica(){}
+
+    public int getIdCita() {
+        return idCita;
+    }
+
+    public void setIdCita(int idCita) {
+        this.idCita = idCita;
     }
 
     public Paciente getPacienteSolicitante() {
@@ -56,4 +72,7 @@ public class CitaMedica {
     public void setIdMedico(double idMedico) {
         this.idMedico = idMedico;
     }
+
+    //METODOS PROPIOS
+
 }

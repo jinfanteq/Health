@@ -1,5 +1,10 @@
 package model.entidades;
 
+
+/*Esta Clase sirve solo como plantilla y para instanciar y hacer operaciones
+ * leves, no tiene la logica completa, esta se manejara en el Usuario Controller,
+ * aca manejaremos datos y logica interno, nada de mostrar datos */
+
 public class Medico extends Usuario {
     private String especialidad;
 
