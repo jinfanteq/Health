@@ -19,7 +19,7 @@ public class Paciente extends Usuario {
 
     //Contructores, local con herencia y constructor vacio
    public Paciente(String nombre, String correo, String password, double id, double telefono, String tipoSangre, String genero, float peso, float altura, ArrayList<String> alergias,ArrayList<CitaMedica> citas){
-       super(nombre,correo, password,id, telefono);
+       super(nombre,correo, password,id, telefono, "Paciente");
        this.tipoSangre = tipoSangre;
        this.genero = genero;
        this.altura = altura;
@@ -82,9 +82,6 @@ public class Paciente extends Usuario {
                 return false; //Ya tiene una cita en esa fecha y Hora, por lo que es un error
             }
         }
-
-
-
         //Si no pues se puede crear la cita por lo que el proceso puede seguir
         CitaMedica cita = new CitaMedica(paciente , medico, fecha);
         return true;
@@ -93,4 +90,7 @@ public class Paciente extends Usuario {
     public boolean cancelarCita(int citaId){
         return citas.removeIf(c -> c.getIdCita() == citaId);
     }
+    /*Estos dos metodos solo revisan que la cita medica exista o no se repita, para poder
+    * o crearla o eliminarla, estos metodos seran llamados posteriormente por usuarioController
+    * para poder hacer la autenticacion de datos restantes y */
 }

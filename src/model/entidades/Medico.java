@@ -5,11 +5,13 @@ package model.entidades;
  * leves, no tiene la logica completa, esta se manejara en el Usuario Controller,
  * aca manejaremos datos y logica interno, nada de mostrar datos */
 
+import java.time.LocalDateTime;
+
 public class Medico extends Usuario {
     private String especialidad;
 
     public Medico(String nombre, String correo, String password, Double id, Double telefono, String especialidad) {
-        super(nombre, correo, password, id, telefono);
+        super(nombre, correo, password, id, telefono , "Medico");
         this.especialidad = especialidad;
     }
     public Medico(){} //constructor vacio y arrina por defecto
@@ -22,8 +24,17 @@ public class Medico extends Usuario {
         this.especialidad = especialidad;
     }
 
-    /*metodos especificos que puede realizar un doctor, aparte de los clasicos que serian
-    iniciar sesion y cerrarla */
+    /*Metodos especificos que puede realizar sin consultar base de datos ni mostrar mensajes(trabajos
+    * del CRUD y de la interfaz grafica*/
+    public boolean confirmarCita(){
+        return true;
+    }
+
+
+    public boolean cancelarCita(CitaMedica cita) {
+        //Solo puede cancelar la cita con 24 horas horas maximo de antelacion, para no causar problemas
+        return cita.getHoraYFecha().isAfter(LocalDateTime.now().plusHours(24));
+    }
 
 
 }

@@ -6,13 +6,15 @@ public class Usuario {
     private String password;
     private Double id;
     private Double telefono;
+    String rol;
 
-    public Usuario(String nombre, String correo, String password, Double id, Double telefono) {
+    public Usuario(String nombre, String correo, String password, Double id, Double telefono, String rol) {
         this.nombre = nombre;
         this.correo = correo;
         this.password = password;
         this.id = id;
         this.telefono = telefono;
+        this.rol = rol;
     }
     public Usuario(){}
 
@@ -55,5 +57,13 @@ public class Usuario {
 
     public void setTelefono(Double telefono) {
         this.telefono = telefono;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
     }
 }
