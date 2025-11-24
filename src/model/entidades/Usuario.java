@@ -1,4 +1,5 @@
 package model.entidades;
+//MIRAR PARA HACER LA ABSTRACTA
 
 public class Usuario {
     private String nombre;

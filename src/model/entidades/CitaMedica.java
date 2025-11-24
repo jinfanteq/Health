@@ -73,6 +73,4 @@ public class CitaMedica {
         this.idMedico = idMedico;
     }
 
-    //METODOS PROPIOS
-
 }
