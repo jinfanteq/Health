@@ -3,6 +3,8 @@ package model.BaseDatos;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
+//EN ESTA CLASE SOLO SE CONECTA LA BASE DE DATOS CON EL CODIGO
+
 public class ConexionBD {
 
     private static final String URL = "jdbc:mysql://localhost:3306/health";

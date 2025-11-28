@@ -3,6 +3,8 @@ package model.BaseDatos;
 import model.entidades.Usuario;
 import java.sql.*;
 
+//CRUD PARA PODER USAR LA BASE DE DATOS DEL USUARIO
+
 public class UsuarioDB {
 
     private Connection conn;
