@@ -103,4 +103,47 @@ public class UsuarioDB {
         /*LOS VALORES SE PONEN NULOS PORQUE DESDE ACA NO SE PUEDEN AÑADIR, SERAN AÑADIDOS DESDE  EL LOGIN CON
         /UNA ACTUALIZACION */
     }
+
+    public boolean revisarCredenciales(String correoIngresado , String contrasenaIngresada){
+        String sql = "SELECT * FROM usuario WHERE correo = ? AND contrasena = ?";
+        try{
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, correoIngresado);
+            ps.setString(2,contrasenaIngresada);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()){ //si el rs sigue significa que existe el usuario
+                 return true;
+            }
+
+        }catch (Exception e) {
+            System.err.println("Error buscar: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public Usuario buscarPorCorreo(String correo) {
+        String sql = "SELECT * FROM usuario WHERE correo = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, correo);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                new Usuario(
+                        rs.getString("nombre"),
+                        rs.getString("correo"),
+                        rs.getString("contrasena"),
+                        rs.getDouble("id"),
+                        rs.getDouble("telefono"),
+                        rs.getString("rol")
+
+                );
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error buscar: " + e.getMessage());
+        }
+        return null;
+    }
 }
