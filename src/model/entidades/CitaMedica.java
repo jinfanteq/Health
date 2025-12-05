@@ -3,7 +3,7 @@ package model.entidades;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-public class CitaMedica {
+public  class CitaMedica {
     private Paciente pacienteSolicitante;
     private Medico medicoQueAtiende;
     private LocalDateTime horaYFecha;

@@ -3,13 +3,20 @@ package controller;
 import model.BaseDatos.UsuarioDB;
 import model.entidades.Usuario;
 
+import java.sql.SQLException;
+
 /*La funcion de esta clase es gestionar la autenticacion de roles ya que vamos
 * a generar distintos mediante un login, dando autorizacion y autenticacion a las
 * credenciales que se den por entrada */
 public class AuthController {
 
-    UsuarioDB userdb = new UsuarioDB();
+    private UsuarioDB userdb;
+
+
     public AuthController(){}
+    public AuthController(UsuarioDB userdb){
+        this.userdb = userdb;
+    }
 
     public Usuario login(String correo , String password){
         //SE VA A MANEJAR CON SCANNER Y SOUT POR EL MOMENTO PERO DESPUES SE ARREGLA PARA GIU
@@ -28,6 +35,10 @@ public class AuthController {
             System.out.println("Registro exitoso");
             return userRegister;
         }
+        return null;
+    }
+    public Usuario delete(Usuario u, int codigoConfirmacion) throws SQLException {
+        Usuario userdelete;
         return null;
     }
 }
