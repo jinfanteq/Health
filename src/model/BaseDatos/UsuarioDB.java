@@ -1,8 +1,11 @@
 package model.BaseDatos;
 
 import GIU.LoginGUI;
+import model.entidades.CitaMedica;
+import model.entidades.Paciente;
 import model.entidades.Usuario;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class UsuarioDB {
@@ -11,17 +14,17 @@ public class UsuarioDB {
     private LoginGUI loginGUI;
 
     public UsuarioDB() {
-        conn = ConexionBD.getConnection();//conexion con base de datos
+        conn = ConexionBD.getConnection();
     }
 
     // ==========================================================
-    // INSERTAR USUARIO + INSERTAR EN TABLA CORRESPONDIENTE AL ROL
+    // INSERTAR USUARIO + TABLA POR ROL
     // ==========================================================
-    public boolean insertar(Usuario u) { //CREATE
+    public boolean insertar(Usuario u) {
         String sqlUsuario = "INSERT INTO usuario(id, nombre, correo, contrasena, telefono, rol) VALUES (?, ?, ?, ?, ?, ?)";
 
         try {
-            conn.setAutoCommit(false);  // Iniciar transacción
+            conn.setAutoCommit(false);
 
             PreparedStatement ps = conn.prepareStatement(sqlUsuario);
             ps.setDouble(1, u.getId());
@@ -30,27 +33,9 @@ public class UsuarioDB {
             ps.setString(4, u.getPassword());
             ps.setDouble(5, u.getTelefono());
             ps.setString(6, u.getRol());
-
             ps.executeUpdate();
 
-            switch (u.getRol().toLowerCase()) {
-                case "paciente":
-                    insertarPaciente(u, u.getId());
-                    break;
 
-                case "medico":
-                    insertarMedico(u, u.getId());
-                    break;
-
-                case "admin":
-                    insertarAdmin(u.getId(), u.getNombre());
-                    break;
-
-                default:
-                    conn.rollback();
-                    System.out.println("Rol no válido: " + u.getRol());
-                    return false;
-            }
 
             conn.commit();
             conn.setAutoCommit(true);
@@ -63,28 +48,80 @@ public class UsuarioDB {
             } catch (SQLException ex) {
                 System.out.println("Error en rollback: " + ex.getMessage());
             }
+
             System.out.println("Error al insertar usuario: " + e.getMessage());
             return false;
         }
     }
+    public Paciente insertarPaciente(
+            Usuario u,
+            Double id,
+            String tipoSangre,
+            Float altura,
+            Float peso,
+            Integer edad,
+            String alergias,
+            String sexo
+    ) throws SQLException {
 
-    // ==========================================================
-    // MÉTODOS PRIVADOS PARA INSERTAR EN TABLAS HIJAS
-    // ==========================================================
+        // Verificar que el usuario existe; si no, insertarlo.
+        String checkSql = "SELECT id FROM usuario WHERE id = ?";
+        try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+            checkPs.setDouble(1, id);
+            try (ResultSet rsCheck = checkPs.executeQuery()) {
+                if (!rsCheck.next()) {
+                    // insertar() ya maneja commit/rollback; si quieres, invoca insertar(u)
+                    insertar(u);
+                }
+            }
+        }
 
-    private void insertarPaciente(Usuario u , Double id) throws SQLException {
-        String sql = "INSERT INTO paciente(nombre , id, tipoSangre, altura, peso, edad, alergias) VALUES (? , ?, NULL, NULL, NULL, NULL, NULL)";
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, u.getNombre());
-        ps.setDouble(2, id);
-        ps.executeUpdate();
+        // Insertar paciente: asegurar orden correcto de columnas y parámetros
+        String sql = "INSERT INTO paciente (id, tipoSangre, altura, peso, edad, alergias, nombre, sexo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, id);
+            ps.setString(2, tipoSangre);
+            ps.setFloat(3, altura != null ? altura : 0f);
+            ps.setFloat(4, peso != null ? peso : 0f);
+            ps.setInt(5, edad != null ? edad : 0);
+            ps.setString(6, alergias != null ? alergias : "");
+            ps.setString(7, u.getNombre()); // nombre
+            ps.setString(8, sexo != null ? sexo : "");
+
+            int rows = ps.executeUpdate();
+            if (rows <= 0) {
+                return null;
+            }
+        }
+
+        // Construir y devolver el objeto Paciente con los datos que acabamos de insertar.
+        ArrayList<String> listaAlergias = new ArrayList<>();
+        if (alergias != null && !alergias.trim().isEmpty()) listaAlergias.add(alergias.trim());
+        ArrayList<CitaMedica> citas = new ArrayList<>();
+
+        // Asegúrate de que Paciente tenga un constructor compatible con este orden:
+        // (nombre, correo, password, id, telefono, tipoSangre, sexo, peso, altura, alergiasList, citas)
+        return new Paciente(
+                u.getNombre(),
+                u.getCorreo(),
+                u.getPassword(),
+                u.getId(),
+                u.getTelefono(),
+                tipoSangre,
+                sexo,
+                peso != null ? peso : 0f,
+                altura != null ? altura : 0f,
+                listaAlergias,
+                citas
+        );
     }
 
-    private void insertarMedico(Usuario u, Double id) throws SQLException {
-        String sql = "INSERT INTO medico(id, especialidad) VALUES (?, ?, NULL)";
+
+    public void insertarMedico(Usuario u, Double id, String especialidad) throws SQLException {
+        String sql = "INSERT INTO medico(id, especialidad) VALUES (?, ?)"; //falta añadir el nombre
         PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, u.getNombre());
-        ps.setDouble(2, id);
+        ps.setDouble(1, id);
+        ps.setString(2, especialidad);
         ps.executeUpdate();
     }
 
@@ -96,20 +133,20 @@ public class UsuarioDB {
         ps.executeUpdate();
     }
 
+    // ==========================================================
     // READ
+    // ==========================================================
     public boolean revisarCredenciales(String correoIngresado , String contrasenaIngresada){
         String sql = "SELECT * FROM usuario WHERE correo = ? AND contrasena = ?";
         try{
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, correoIngresado);
-            ps.setString(2,contrasenaIngresada);
+            ps.setString(2, contrasenaIngresada);
             ResultSet rs = ps.executeQuery();
 
-            if (rs.next()){
-                return true;
-            }
+            return rs.next();
 
-        }catch (Exception e) {
+        } catch (Exception e) {
             System.err.println("Error buscar: " + e.getMessage());
         }
         return false;
@@ -139,82 +176,98 @@ public class UsuarioDB {
         return null;
     }
 
-    //UPDATE
-    public Usuario actualizarDatos(Usuario u, String correo ,String  password , Double idNuevo , String nombreNuevo, String correoNuevo, String contrasenaNueva , Double telefonoNuevo){
-        if(revisarCredenciales(correo , password)) {
-            double idUsuario = u.getId();
-            String sql = "SELECT * FROM usuario where id = ?";
-            try {
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ps.setDouble(1, idUsuario);
-                ResultSet rs = ps.executeQuery();
-
-                if (rs.next() ) {
-                    String cambio =
-                            "UPDATE usuario SET id = ? , nombre = ? , correo = ? , contrasena = ? , telefono = ?" +
-                                    " WHERE id = ? ";
-
-                    ps = conn.prepareStatement(cambio);
-                    ps.setDouble(1 , idNuevo );
-                    ps.setString(2, nombreNuevo);
-                    ps.setString(3, correoNuevo);
-                    ps.setString(4, contrasenaNueva);
-                    ps.setDouble(5, telefonoNuevo);
-                    ps.setDouble(6, idUsuario);
-
-                    ps.executeUpdate();
-
-                    switch (u.getRol().toLowerCase()){
-                        //ACTUALIZAR PARA QUE LOS DATOS SE PIDAN POR CONSOLA EN EL LOGINGUI
-                        case "medico":
-                            Scanner scanner = new Scanner(System.in);
-                            String especialidadNueva = scanner.nextLine();
-                            actualizarMedico(u ,especialidadNueva);
-                            break;
-
-                        case "paciente":
-
-                            break;
-                    }
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+    // ==========================================================
+    // UPDATE
+    // ==========================================================
+    public Usuario actualizarDatos(
+            Usuario u, String correo, String password,
+            double idNuevo, String nombreNuevo, String correoNuevo,
+            String contrasenaNueva, double telefonoNuevo
+    ) {
+        if(!revisarCredenciales(correo, password)) {
+            System.out.println("Credenciales incorrectas");
+            return null;
         }
-        return null;
+
+        double idUsuario = u.getId();
+        String sql = "SELECT * FROM usuario WHERE id = ?";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setDouble(1, idUsuario);
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()) {
+
+                String cambio =
+                        "UPDATE usuario SET id = ?, nombre = ?, correo = ?, contrasena = ?, telefono = ? WHERE id = ?";
+
+                ps = conn.prepareStatement(cambio);
+                ps.setDouble(1, idNuevo);
+                ps.setString(2, nombreNuevo);
+                ps.setString(3, correoNuevo);
+                ps.setString(4, contrasenaNueva);
+                ps.setDouble(5, telefonoNuevo);
+                ps.setDouble(6, idUsuario);
+                ps.executeUpdate();
+
+                switch (u.getRol().toLowerCase()) {
+                    case "medico":
+                        Scanner scanner = new Scanner(System.in);
+                        String especialidadNueva = scanner.nextLine();
+                        actualizarMedico(u, especialidadNueva);
+                        break;
+
+                    case "paciente":
+                        Scanner scanner1 = new Scanner(System.in);
+                        String tipoSangre = scanner1.nextLine();
+                        float altura = scanner1.nextFloat();
+                        float peso = scanner1.nextFloat();
+                        int edad = scanner1.nextInt();
+                        scanner1.nextLine();
+                        String alergias = scanner1.nextLine();
+                        actualizarPaciente(u, tipoSangre, altura, peso, edad, alergias);
+                        break;
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return u;
     }
 
-    private void actualizarMedico(Usuario u, String especialidadNueva) throws SQLException{
+    private void actualizarMedico(Usuario u, String especialidadNueva) throws SQLException {
         String sql = "UPDATE medico SET especialidad = ? WHERE id = ?";
         PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1 , especialidadNueva);
+        ps.setString(1, especialidadNueva);
         ps.setDouble(2, u.getId());
         ps.executeUpdate();
     }
 
-    private void actualizarPaciente(Usuario u, String tipoSangreNueva , float alturaNueva, float pesoNuevo , int edadNueva , String alergias) throws SQLException{
-        String sql = "UPDATE paciente SET tipoSangre = ? , altura = ?,peso = ? ,  edad = ? , alergias = ? WHERE id = ?";
+    private void actualizarPaciente(Usuario u, String tipoSangreNueva, float altura, float peso, int edad, String alergias) throws SQLException {
+        String sql = "UPDATE paciente SET tipoSangre = ?, altura = ?, peso = ?, edad = ?, alergias = ? WHERE id = ?";
         PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1 , tipoSangreNueva);
-        ps.setFloat(2, alturaNueva);
-        ps.setFloat(3, pesoNuevo);
-        ps.setInt(4, edadNueva);
+        ps.setString(1, tipoSangreNueva);
+        ps.setFloat(2, altura);
+        ps.setFloat(3, peso);
+        ps.setInt(4, edad);
         ps.setString(5, alergias);
-        ps.setDouble(6,u.getId());
+        ps.setDouble(6, u.getId());
         ps.executeUpdate();
     }
 
+    // ==========================================================
+    // DELETE
+    // ==========================================================
     public boolean eliminarUsuario(Usuario u) throws SQLException {
-        if(u != null) {
-            String sql = "DELETE FROM usuario WHERE id = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setDouble(1,u.getId());
-            ps.executeUpdate();
-        }
+        if (u == null) return false;
 
-        return false;
+        String sql = "DELETE FROM usuario WHERE id = ?";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setDouble(1, u.getId());
+
+        return ps.executeUpdate() > 0;
     }
-
-
-
 }

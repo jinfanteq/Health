@@ -1,29 +1,40 @@
 package model.entidades;
 
+import java.sql.Date;
+import java.sql.Time;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Random;
 
-public  class CitaMedica {
+public class CitaMedica {
     private Paciente pacienteSolicitante;
     private Medico medicoQueAtiende;
-    private LocalDateTime horaYFecha;
+    private LocalDate fecha;
+    private Time hora;
     private double idPaciente;
     private double idMedico;
     private int idCita;
 
     Random random = new Random();
 
-    public CitaMedica(Paciente pacienteSolicitante, Medico medicoQueAtiende, LocalDateTime horaYFecha) {
+    public CitaMedica(Paciente pacienteSolicitante, Medico medicoQueAtiende, LocalDate fecha , Time hora) {
         this.pacienteSolicitante = pacienteSolicitante;
         this.medicoQueAtiende = medicoQueAtiende;
-        this.horaYFecha = horaYFecha;
+        this.fecha = fecha;
+        this.hora = hora;
         this.idPaciente = pacienteSolicitante.getId();
         this.idMedico = medicoQueAtiende.getId();
-        //Numero al azar
-        this.idCita = 1000 + random.nextInt(9000);
-
     }
     public CitaMedica(){}
+
+    public CitaMedica(int idCita, Object idPaciente, Object idMedico, Date fecha, Time hora, String motivoConsulta) {
+        this.idCita = idCita;
+        this.idMedico = (double) idMedico;
+        this.idPaciente = (double) idPaciente;
+        this.fecha = fecha.toLocalDate();
+        this.hora = hora;
+    }
 
     public int getIdCita() {
         return idCita;
@@ -49,12 +60,20 @@ public  class CitaMedica {
         this.medicoQueAtiende = medicoQueAtiende;
     }
 
-    public LocalDateTime getHoraYFecha() {
-        return horaYFecha;
+    public LocalDate getFecha() {
+        return fecha;
     }
 
-    public void setHoraYFecha(LocalDateTime horaYFecha) {
-        this.horaYFecha = horaYFecha;
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public Time getHora() {
+        return hora;
+    }
+
+    public void setHora(Time hora) {
+        this.hora = hora;
     }
 
     public double getIdPaciente() {

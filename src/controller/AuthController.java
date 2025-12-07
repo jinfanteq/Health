@@ -2,43 +2,61 @@ package controller;
 
 import model.BaseDatos.UsuarioDB;
 import model.entidades.Usuario;
-
 import java.sql.SQLException;
 
-/*La funcion de esta clase es gestionar la autenticacion de roles ya que vamos
-* a generar distintos mediante un login, dando autorizacion y autenticacion a las
-* credenciales que se den por entrada */
 public class AuthController {
 
     private UsuarioDB userdb;
 
-
-    public AuthController(){}
+    public AuthController() {}
     public AuthController(UsuarioDB userdb){
         this.userdb = userdb;
     }
 
     public Usuario login(String correo , String password){
-        //SE VA A MANEJAR CON SCANNER Y SOUT POR EL MOMENTO PERO DESPUES SE ARREGLA PARA GIU
+
         if (userdb.revisarCredenciales(correo, password)){
             System.out.println("Ingreso correcto");
             return userdb.buscarPorCorreo(correo);
-        }else{
+        } else {
             System.err.println("DATOS INCORRECTOS");
+            return null;
         }
-        return null;
     }
 
-    public Usuario register(String nombre, String correo, String password, Double id, Double telefono, String rol){
-        Usuario userRegister = new Usuario(nombre,correo,password,id,telefono,rol);
+    public Usuario register(String nombre, String correo, String password, double id, double telefono, String rol){
+
+        Usuario userRegister = new Usuario(nombre, correo, password, id, telefono, rol);
+
         if(userdb.insertar(userRegister)) {
             System.out.println("Registro exitoso");
             return userRegister;
         }
+
         return null;
     }
+
     public Usuario delete(Usuario u, int codigoConfirmacion) throws SQLException {
-        Usuario userdelete;
-        return null;
+
+        final int CODIGO_VALIDO = 1234;
+
+        if (u == null) {
+            return null;
+        }
+
+        if (codigoConfirmacion != CODIGO_VALIDO) {
+            System.out.println("Código de confirmación incorrecto.");
+            return null;
+        }
+
+        boolean eliminado = userdb.eliminarUsuario(u);
+
+        if (eliminado) {
+            System.out.println("Usuario eliminado exitosamente.");
+            return u;
+        } else {
+            System.out.println("No se eliminó el usuario (no existe en BD).");
+            return null;
+        }
     }
 }

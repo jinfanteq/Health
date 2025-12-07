@@ -5,7 +5,9 @@ package model.entidades;
  * leves, no tiene la logica completa, esta se manejara en el Usuario Controller,
  * aca manejaremos datos y logica interno, nada de mostrar datos */
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 public class Medico extends Usuario {
     private String especialidad;
@@ -33,7 +35,7 @@ public class Medico extends Usuario {
 
     public boolean cancelarCita(CitaMedica cita) {
         //Solo puede cancelar la cita con 24 horas horas maximo de antelacion, para no causar problemas
-        return cita.getHoraYFecha().isAfter(LocalDateTime.now().plusHours(24));
+        return cita.getHora().after(Date.from(Instant.now().plusSeconds(86400)));
     }
 
 

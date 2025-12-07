@@ -1,9 +1,9 @@
 package model.entidades;
 
-import java.lang.reflect.Array;
-import java.time.LocalDateTime;
+import java.sql.Time;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.List;
+
 
 /*Esta Clase sirve solo como plantilla y para instanciar y hacer operaciones
 * leves, no tiene la logica completa, esta se manejara en el Usuario Controller,
@@ -18,17 +18,17 @@ public class Paciente extends Usuario {
     private ArrayList<CitaMedica> citas; // relación con las citas del paciente
 
     //Contructores, local con herencia y constructor vacio
-   public Paciente(String nombre, String correo, String password, double id, double telefono, String tipoSangre, String genero, float peso, float altura, ArrayList<String> alergias,ArrayList<CitaMedica> citas){
-       super(nombre,correo, password,id, telefono, "Paciente");
-       this.tipoSangre = tipoSangre;
-       this.genero = genero;
-       this.altura = altura;
-       this.peso = peso;
-       this.alergias = alergias;
-       this.citas = citas;
-   }
-
-   public Paciente(){}
+    public Paciente(String nombre, String correo, String password, double id, double telefono,
+                    String tipoSangre, String genero, float peso, float altura,
+                    ArrayList<String> alergias, ArrayList<CitaMedica> citas) {
+        super(nombre, correo, password, id, telefono, "Paciente");
+        this.tipoSangre = tipoSangre;
+        this.genero = genero;
+        this.altura = altura;
+        this.peso = peso;
+        this.alergias = alergias != null ? alergias : new ArrayList<>();
+        this.citas = citas != null ? citas : new ArrayList<>();
+    }
 
    //Getters y Setters
 
@@ -75,15 +75,15 @@ public class Paciente extends Usuario {
     //Metodos propios
 
     //verifica si si se puede agendar una cita
-    public boolean agendarCita(Medico medico , Paciente paciente, LocalDateTime fecha) {
+    public boolean agendarCita(Medico medico , Paciente paciente, LocalDate fecha , Time hora) {
         //verificamos que no tenga cita en ese momento
         for (CitaMedica c : citas) {
-            if (c.getHoraYFecha().equals(fecha)) {
+            if (c.getFecha().equals(fecha) && c.getHora().equals(hora)) {
                 return false; //Ya tiene una cita en esa fecha y Hora, por lo que es un error
             }
         }
         //Si no pues se puede crear la cita por lo que el proceso puede seguir
-        CitaMedica cita = new CitaMedica(paciente , medico, fecha);
+        CitaMedica cita = new CitaMedica(paciente , medico, fecha , hora);
         return true;
     }
 
