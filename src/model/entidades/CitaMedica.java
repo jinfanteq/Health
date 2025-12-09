@@ -16,7 +16,6 @@ public class CitaMedica {
     private double idMedico;
     private int idCita;
 
-    Random random = new Random();
 
     public CitaMedica(Paciente pacienteSolicitante, Medico medicoQueAtiende, LocalDate fecha , Time hora) {
         this.pacienteSolicitante = pacienteSolicitante;

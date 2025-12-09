@@ -36,27 +36,4 @@ public class AuthController {
         return null;
     }
 
-    public Usuario delete(Usuario u, int codigoConfirmacion) throws SQLException {
-
-        final int CODIGO_VALIDO = 1234;
-
-        if (u == null) {
-            return null;
-        }
-
-        if (codigoConfirmacion != CODIGO_VALIDO) {
-            System.out.println("Código de confirmación incorrecto.");
-            return null;
-        }
-
-        boolean eliminado = userdb.eliminarUsuario(u);
-
-        if (eliminado) {
-            System.out.println("Usuario eliminado exitosamente.");
-            return u;
-        } else {
-            System.out.println("No se eliminó el usuario (no existe en BD).");
-            return null;
-        }
-    }
 }

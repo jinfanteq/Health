@@ -1,8 +1,11 @@
 package model.BaseDatos;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Random;
+
+import controller.AuthController;
 import model.entidades.CitaMedica;
 import model.entidades.Medico;
 import model.entidades.Paciente;
@@ -12,16 +15,21 @@ import java.sql.*;
 public class CitaMedicaBD {
 
     private Connection conn;
+    private UsuarioDB userDb;
+    private AuthController authController;
+
 
     public CitaMedicaBD() {
         conn = ConexionBD.getConnection();
+        userDb = new UsuarioDB();
+        authController = new AuthController(userDb);
     }
 
     // ==========================================================
     // CREATE
     // ==========================================================
 
-    public boolean crearCita(Paciente paciente, Medico medico, LocalDate fecha, Time hora) {
+    public int crearCita(Paciente paciente, Medico medico, LocalDate fecha, Time hora) {
         Random random = new Random();
         int idCita = random.nextInt(900000) + 100000;
 
@@ -29,7 +37,7 @@ public class CitaMedicaBD {
 
             if (!paciente.agendarCita(medico, paciente, fecha, hora)) {
                 System.out.println("El paciente ya tiene una cita en esa fecha/hora");
-                return false;
+                return 0;
             }
 
             String sql = "INSERT INTO citamedica(idCita, idPaciente, idMedico, fecha, hora, motivoConsulta) VALUES (?,?,?,?,?,NULL)";
@@ -48,7 +56,8 @@ public class CitaMedicaBD {
 
                 conn.commit();
                 conn.setAutoCommit(true);
-                return true;
+                System.out.println("SU CITA HA SIDO AGENDADA CON EXITO, EL IDENTIFICADOR ES: "  + idCita);
+                return idCita;
 
             } catch (SQLException e) {
                 try {
@@ -61,7 +70,7 @@ public class CitaMedicaBD {
                 System.out.println("Error al crear cita: " + e.getMessage());
             }
         }
-        return false;
+        return 0;
     }
 
     // ==========================================================
@@ -142,24 +151,61 @@ public class CitaMedicaBD {
     // DELETE – Eliminar cita
     // ==========================================================
 
-    public boolean eliminarCita(int idCita) {
+    public boolean eliminarCita(Paciente paciente, int idCita){
 
+        // 1. Revisar si la cita existe en BD
         if (!revisarCita(idCita)) {
             System.out.println("Cita inexistente");
             return false;
         }
 
-        String sql = "DELETE FROM citamedica WHERE idCita = ?";
-
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, idCita);
-            return ps.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            System.out.println("Error al eliminar cita: " + e.getMessage());
+        // 2. Traer el paciente desde BD
+        Paciente pacientee = (Paciente) userDb.buscarPorCorreo(paciente.getCorreo());
+        if (pacientee == null) {
+            System.out.println("Paciente no encontrado");
+            return false;
         }
+
+        // 3. Obtener la cita para revisar fecha y hora
+        CitaMedica cita = buscarPorId(idCita);
+        if (cita == null) {
+            System.out.println("No se pudo recuperar la cita");
+            return false;
+        }
+
+        // 4. Verificar si ya ha pasado 1 hora desde la cita
+        LocalDateTime fechaHoraCita = LocalDateTime.of(
+                cita.getFecha(),
+                cita.getHora().toLocalTime()
+        );
+
+        LocalDateTime limite = fechaHoraCita.plusHours(1);
+        LocalDateTime ahora = LocalDateTime.now();
+
+        if (ahora.isAfter(limite)) {
+            System.out.println("La cita ya pasó hace más de una hora. Se eliminará automáticamente.");
+        }
+
+        // 5. Eliminar del paciente (lista en memoria)
+        if(pacientee.cancelarCita(idCita)) {
+
+            // 6. Eliminar de la base de datos
+            String sql = "DELETE FROM citamedica WHERE idCita = ?";
+
+            try {
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setInt(1, idCita);
+                return ps.executeUpdate() > 0;
+
+            } catch (SQLException e) {
+                System.out.println("Error al eliminar cita: " + e.getMessage());
+            }
+
+            return true;
+        }
+
         return false;
     }
+
 
 }

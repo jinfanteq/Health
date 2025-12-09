@@ -72,20 +72,45 @@ public class Paciente extends Usuario {
         this.alergias = alergias;
     }
 
+    public ArrayList<CitaMedica> getCitas() {
+        return citas;
+    }
+
+    public void setCitas(ArrayList<CitaMedica> citas) {
+        this.citas = citas;
+    }
+
     //Metodos propios
 
     //verifica si si se puede agendar una cita
     public boolean agendarCita(Medico medico , Paciente paciente, LocalDate fecha , Time hora) {
-        //verificamos que no tenga cita en ese momento
+
+        // 1. Revisar que el paciente no tenga ya una cita en esa fecha/hora
         for (CitaMedica c : citas) {
             if (c.getFecha().equals(fecha) && c.getHora().equals(hora)) {
-                return false; //Ya tiene una cita en esa fecha y Hora, por lo que es un error
+                return false; // El paciente ya tiene cita
             }
         }
-        //Si no pues se puede crear la cita por lo que el proceso puede seguir
-        CitaMedica cita = new CitaMedica(paciente , medico, fecha , hora);
+
+        // 2. Revisar que el médico no tenga una cita en esa fecha/hora
+        if (medico.getCitaMedicasAtender() != null) {
+            for (CitaMedica c : medico.getCitaMedicasAtender()) {
+                if (c.getFecha().equals(fecha) && c.getHora().equals(hora)) {
+                    return false; // El médico ya tiene ocupada esa hora
+                }
+            }
+        }
+
+        // 3. Crear la cita si todo está libre
+        CitaMedica cita = new CitaMedica(paciente, medico, fecha, hora);
+
+        // 4. Guardar la cita en ambas listas
+        this.citas.add(cita);
+        medico.getCitaMedicasAtender().add(cita);
+
         return true;
     }
+
 
     public boolean cancelarCita(int citaId){
         return citas.removeIf(c -> c.getIdCita() == citaId);

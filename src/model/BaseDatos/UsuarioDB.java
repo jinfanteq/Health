@@ -2,6 +2,7 @@ package model.BaseDatos;
 
 import GIU.LoginGUI;
 import model.entidades.CitaMedica;
+import model.entidades.Medico;
 import model.entidades.Paciente;
 import model.entidades.Usuario;
 import java.sql.*;
@@ -70,7 +71,6 @@ public class UsuarioDB {
             checkPs.setDouble(1, id);
             try (ResultSet rsCheck = checkPs.executeQuery()) {
                 if (!rsCheck.next()) {
-                    // insertar() ya maneja commit/rollback; si quieres, invoca insertar(u)
                     insertar(u);
                 }
             }
@@ -117,21 +117,32 @@ public class UsuarioDB {
     }
 
 
-    public void insertarMedico(Usuario u, Double id, String especialidad) throws SQLException {
-        String sql = "INSERT INTO medico(id, especialidad) VALUES (?, ?)"; //falta añadir el nombre
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setDouble(1, id);
-        ps.setString(2, especialidad);
-        ps.executeUpdate();
+    public Medico insertarMedico(Usuario u, String especialidad) throws SQLException {
+        // Verificar que el usuario existe; si no, insertarlo.
+        String checkSql = "SELECT id FROM usuario WHERE id = ?";
+        try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+            checkPs.setDouble(1, u.getId());
+            try (ResultSet rsCheck = checkPs.executeQuery()) {
+                if (!rsCheck.next()) {
+                    insertar(u);
+                }
+            }
+        }
+        String sql = "INSERT INTO medico(id, especialidad) VALUES (?, ?, ?)"; //falta añadir el nombre
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, u.getId());
+            ps.setString(2, especialidad);
+            ps.setString(3, u.getNombre());
+            int rows = ps.executeUpdate();
+            if (rows <= 0) {
+                return null;
+            }
+            ArrayList<CitaMedica> citasMedico = new ArrayList<>();
+            return new Medico(u.getNombre(), u.getCorreo(), u.getPassword(), u.getId(), u.getTelefono(), especialidad,citasMedico);
+        }
     }
 
-    private void insertarAdmin(Double id, String nombre) throws SQLException {
-        String sql = "INSERT INTO admin(id, nombre) VALUES (?, ?)";
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setDouble(1, id);
-        ps.setString(2, nombre);
-        ps.executeUpdate();
-    }
+
 
     // ==========================================================
     // READ
@@ -151,6 +162,22 @@ public class UsuarioDB {
         }
         return false;
     }
+
+    public boolean revisarPorCorreo(String correoIngresado ){
+        String sql = "SELECT * FROM usuario WHERE correo = ?";
+        try{
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, correoIngresado);
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next();
+
+        } catch (Exception e) {
+            System.err.println("Error buscar: " + e.getMessage());
+        }
+        return false;
+    }
+
 
     public Usuario buscarPorCorreo(String correo) {
         String sql = "SELECT * FROM usuario WHERE correo = ?";

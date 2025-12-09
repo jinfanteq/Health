@@ -253,10 +253,9 @@ public class LoginGUI {
                 String alergias = alergiasText.getText().trim();
 
                 // Construir usuario y persistir en la tabla 'usuario'
-                Usuario nuevo = new Usuario(nombre, correo, contraseña, (double) id, (double) telefono, "paciente");
+                Usuario nuevo = controladorLogin.register(nombre, correo, contraseña, (double) id, (double) telefono, "paciente");
 
-                boolean usuarioCreado = usuarioDB.insertar(nuevo);
-                if (!usuarioCreado) {
+                if(nuevo == null ) {
                     mensaje.setText("Error creando usuario (tabla usuario).");
                     return;
                 }

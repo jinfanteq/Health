@@ -7,14 +7,17 @@ package model.entidades;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class Medico extends Usuario {
     private String especialidad;
+    private ArrayList<CitaMedica>  citaMedicasAtender;
 
-    public Medico(String nombre, String correo, String password, Double id, Double telefono, String especialidad) {
+    public Medico(String nombre, String correo, String password, Double id, Double telefono, String especialidad, ArrayList<CitaMedica>  citaMedicasAtender) {
         super(nombre, correo, password, id, telefono , "Medico");
         this.especialidad = especialidad;
+        this.citaMedicasAtender = new ArrayList<>();
     }
     public Medico(){} //constructor vacio y arrina por defecto
 
@@ -24,6 +27,14 @@ public class Medico extends Usuario {
 
     public void setEspecialidad(String especialidad) {
         this.especialidad = especialidad;
+    }
+
+    public ArrayList<CitaMedica> getCitaMedicasAtender() {
+        return citaMedicasAtender;
+    }
+
+    public void setCitaMedicasAtender(ArrayList<CitaMedica> citaMedicasAtender) {
+        this.citaMedicasAtender = citaMedicasAtender;
     }
 
     /*Metodos especificos que puede realizar sin consultar base de datos ni mostrar mensajes(trabajos
